@@ -3,44 +3,10 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { subgraphRequest, ipfsGet } from '../../utils';
+import { DebtCacheABI, SNXHoldersResult, SynthetixStateABI } from './helper';
 
 export const author = 'andytcf';
 export const version = '1.0.0';
-
-type SNXHoldersResult = {
-  snxholders: {
-    id: string;
-    initialDebtOwnership: BigNumber;
-    debtEntryAtIndex: BigNumber;
-  }[];
-};
-
-const DebtCacheABI = [
-  {
-    constant: true,
-    inputs: [],
-    name: 'currentDebt',
-    outputs: [
-      { internalType: 'uint256', name: 'debt', type: 'uint256' },
-      { internalType: 'bool', name: 'anyRateIsInvalid', type: 'bool' }
-    ],
-    payable: false,
-    stateMutability: 'view',
-    type: 'function'
-  }
-];
-
-const SynthetixStateABI = [
-  {
-    constant: true,
-    inputs: [],
-    name: 'lastDebtLedgerEntry',
-    outputs: [{ name: '', type: 'uint256' }],
-    payable: false,
-    stateMutability: 'view',
-    type: 'function'
-  }
-];
 
 const SynthetixStateContractAddress =
   '0x4b9Ca5607f1fF8019c1C6A3c2f0CC8de622D5B82';
@@ -48,8 +14,7 @@ const DebtCacheContractAddress = '0x9bB05EF2cA7DBAafFC3da1939D1492e6b00F39b8';
 
 const defaultGraphs = {
   '1': 'https://api.thegraph.com/subgraphs/name/synthetixio-team/synthetix',
-  '10':
-    'https://api.thegraph.com/subgraphs/name/synthetixio-team/optimism-general'
+  '10': 'https://api.thegraph.com/subgraphs/name/synthetixio-team/optimism-general'
 };
 
 const ovmSnapshotJSON = 'QmNwvhq4By1Mownjycg7bWSXqbJWMVyAWRZ1K4mjxuvGXg';
@@ -59,22 +24,27 @@ const MED_PRECISE_UNIT = 1e18;
 const SCALING_FACTOR = 1e5;
 
 function returnGraphParams(snapshot: number | string, addresses: string[]) {
-  return {
+  const params = {
     snxholders: {
       __args: {
         where: {
           id_in: addresses.map((address: string) => address.toLowerCase())
         },
-        first: 1000,
-        block: {
-          number: snapshot
-        }
+        first: 1000
       },
       id: true,
       initialDebtOwnership: true,
       debtEntryAtIndex: true
     }
   };
+
+  if (snapshot !== 'latest') {
+    (params.snxholders.__args as any).block = {
+      number: snapshot
+    };
+  }
+
+  return params;
 }
 
 const loadLastDebtLedgerEntry = async (

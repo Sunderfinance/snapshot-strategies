@@ -1,41 +1,15 @@
 import { getAddress } from '@ethersproject/address';
-import { SNAPSHOT_SUBGRAPH_URL, subgraphRequest } from '../utils';
+import { getDelegatesBySpace } from '../utils';
 
-export async function getDelegations(
-  space,
-  network,
-  provider,
-  addresses,
-  options,
-  snapshot
-) {
+const DELEGATION_DATA_CACHE = {};
+
+// delegations with overrides
+export async function getDelegations(space, network, addresses, snapshot) {
   const addressesLc = addresses.map((addresses) => addresses.toLowerCase());
-  const spaceIn = ['', space];
-  if (space.includes('.eth')) spaceIn.push(space.replace('.eth', ''));
-  const params = {
-    delegations: {
-      __args: {
-        where: {
-          // delegate_in: addressesLc,
-          // delegator_not_in: addressesLc,
-          space_in: spaceIn
-        },
-        first: 1000
-      },
-      delegator: true,
-      space: true,
-      delegate: true
-    }
-  };
-  if (snapshot !== 'latest') {
-    // @ts-ignore
-    params.delegations.__args.block = { number: snapshot };
-  }
-  const result = await subgraphRequest(SNAPSHOT_SUBGRAPH_URL[network], params);
-  if (!result?.delegations) return {};
+  const delegatesBySpace = await getDelegatesBySpace(network, space, snapshot);
 
-  const delegations = result.delegations.filter(
-    (delegation) =>
+  const delegations = delegatesBySpace.filter(
+    (delegation: any) =>
       addressesLc.includes(delegation.delegate) &&
       !addressesLc.includes(delegation.delegator)
   );
@@ -43,13 +17,13 @@ export async function getDelegations(
 
   const delegationsReverse = {};
   delegations.forEach(
-    (delegation) =>
+    (delegation: any) =>
       (delegationsReverse[delegation.delegator] = delegation.delegate)
   );
   delegations
-    .filter((delegation) => delegation.space !== '')
+    .filter((delegation: any) => delegation.space !== '')
     .forEach(
-      (delegation) =>
+      (delegation: any) =>
         (delegationsReverse[delegation.delegator] = delegation.delegate)
     );
 
@@ -61,4 +35,61 @@ export async function getDelegations(
         .map(([delegator]) => getAddress(delegator))
     ])
   );
+}
+
+function getDelegationReverseData(delegation) {
+  return {
+    delegate: delegation.delegate,
+    delegateAddress: getAddress(delegation.delegate),
+    delegator: delegation.delegator,
+    delegatorAddress: getAddress(delegation.delegator)
+  };
+}
+
+export async function getDelegationsData(space, network, addresses, snapshot) {
+  const cacheKey = `${space}-${network}-${snapshot}`;
+  let delegationsReverse = DELEGATION_DATA_CACHE[cacheKey];
+
+  if (!delegationsReverse) {
+    delegationsReverse = {};
+
+    const delegatesBySpace = await getDelegatesBySpace(
+      network,
+      space,
+      snapshot
+    );
+
+    delegatesBySpace.forEach(
+      (delegation: any) =>
+        (delegationsReverse[delegation.delegator] =
+          getDelegationReverseData(delegation))
+    );
+    delegatesBySpace
+      .filter((delegation: any) => delegation.space !== '')
+      .forEach(
+        (delegation: any) =>
+          (delegationsReverse[delegation.delegator] =
+            getDelegationReverseData(delegation))
+      );
+
+    if (space === 'stgdao.eth' && snapshot !== 'latest') {
+      // TODO: implement LRU so memory doesn't explode
+      // we only cache stgdao for now
+      console.log(`[with-delegation] Caching ${cacheKey}`);
+      DELEGATION_DATA_CACHE[cacheKey] = delegationsReverse;
+    }
+  }
+  return {
+    delegations: Object.fromEntries(
+      addresses.map((address) => [
+        address,
+        Object.values(delegationsReverse)
+          .filter((data) => address.toLowerCase() === (data as any).delegate)
+          .map((data) => (data as any).delegatorAddress)
+      ])
+    ),
+    allDelegators: Object.values(delegationsReverse).map(
+      (data) => (data as any).delegatorAddress
+    )
+  };
 }

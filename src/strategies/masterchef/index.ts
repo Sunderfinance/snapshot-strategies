@@ -3,11 +3,11 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { subgraphRequest } from '../../utils';
 
 const MASTERCHEF_SUBGRAPH_URL = {
-  '1': 'https://api.thegraph.com/subgraphs/name/sushiswap/master-chef'
+  '1': 'https://subgrapher.snapshot.org/subgraph/arbitrum/AkCK7BgZJHVwjDdxbnaER1e2XPpywnXVkVZV4p7QGnua'
 };
 
 const SUSHISWAP_SUBGRAPH_URL = {
-  '1': 'https://api.thegraph.com/subgraphs/name/sushiswap/exchange'
+  '1': 'https://subgrapher.snapshot.org/subgraph/arbitrum/6NUtT5mGjZ1tSshKLf5Q3uEEJtjBZJo1TpL5MXsUBqrT'
 };
 
 export const author = '0xKiwi';
@@ -130,7 +130,7 @@ export async function strategy(
     const pair = allSushiPools.filter(
       ({ id }) => id == masterchefResult.pools[0].pair
     )[0];
-    console.log(pair);
+    // console.log(pair);
     const token0perUni = pair.reserve0 / pair.totalSupply;
     const token1perUni = pair.reserve1 / pair.totalSupply;
     stakedBalances.forEach((u: any) => {

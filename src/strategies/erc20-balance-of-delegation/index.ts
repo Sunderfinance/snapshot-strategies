@@ -3,6 +3,7 @@ import { getDelegations } from '../../utils/delegation';
 
 export const author = 'bonustrack';
 export const version = '0.1.0';
+export const dependOnOtherAddress = true;
 
 export async function strategy(
   space,
@@ -12,16 +13,14 @@ export async function strategy(
   options,
   snapshot
 ) {
+  const delegationSpace = options.delegationSpace || space;
   const delegations = await getDelegations(
-    space,
+    delegationSpace,
     network,
-    provider,
     addresses,
-    options,
     snapshot
   );
   if (Object.keys(delegations).length === 0) return {};
-  console.debug('Delegations', delegations);
 
   const score = await erc20BalanceOfStrategy(
     space,
@@ -33,7 +32,6 @@ export async function strategy(
     options,
     snapshot
   );
-  console.debug('Delegators score', score);
 
   return Object.fromEntries(
     addresses.map((address) => {

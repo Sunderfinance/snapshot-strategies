@@ -1,27 +1,26 @@
+import { Provider } from '@ethersproject/providers';
 import { subgraphRequest } from '../../utils';
 import { verifyResults } from './graphUtils';
 
 export const TOKEN_DISTRIBUTION_SUBGRAPH_URL = {
-  '1':
-    'https://api.thegraph.com/subgraphs/name/graphprotocol/token-distribution',
-  '4':
-    'https://api.thegraph.com/subgraphs/name/davekaj/token-distribution-rinkeby'
+  '1': 'https://subgrapher.snapshot.org/subgraph/arbitrum/ChfAJn6jQEBjVqtdUiThfG6sWy2Sr5XQPNucE9DkgXSN',
+  '4': 'https://api.thegraph.com/subgraphs/name/davekaj/token-distribution-rinkeby'
 };
 interface TokenLockWallets {
   [key: string]: string[];
 }
 
-/*
+/**
   @dev Queries the subgraph to find if an address owns any token lock wallets
-  @returns An object with the beneficiaries as keys and TLWs as values in an array 
+  @returns An object with the beneficiaries as keys and TLWs as values in an array
 */
 export async function getTokenLockWallets(
-  _space,
-  network,
-  _provider,
-  addresses,
-  options,
-  snapshot
+  _space: string,
+  network: string,
+  _provider: Provider,
+  addresses: string[],
+  options: Record<string, any>,
+  snapshot: string | number
 ): Promise<TokenLockWallets> {
   const tokenLockParams = {
     tokenLockWallets: {
@@ -29,7 +28,7 @@ export async function getTokenLockWallets(
         where: {
           beneficiary_in: addresses
         },
-        first: 1000
+        first: options.pageSize
       },
       id: true,
       beneficiary: true

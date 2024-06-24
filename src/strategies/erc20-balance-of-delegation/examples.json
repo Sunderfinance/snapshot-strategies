@@ -4,18 +4,18 @@
     "strategy": {
       "name": "erc20-balance-of-delegation",
       "params": {
-        "address": "0xd0a1e359811322d97991e03f863a0c30c2cf029c",
-        "symbol": "WETH",
-        "decimals": 18
+        "symbol": "POHD",
+        "address": "0x1dAD862095d40d43c2109370121cf087632874dB",
+        "decimals": 0,
+        "delegationSpace": "poh.eth"
       }
     },
-    "network": "42",
+    "network": "1",
     "addresses": [
-      "0xeF8305E140ac520225DAf050e2f71d5fBcC543e7",
-      "0xe7Bf80807514d91B8B6321044CA2785d59541d5c",
-      "0xe105766f0156DAec8a46E407E35634542fA012E6",
-      "0xeEFA7451c03d52ce909A93654664c46cf81DdD21"
+      "0x3c13f2B56AF614aC6381265EcB3B619bA26CC641",
+      "0x048fee7c3279a24af0790b6b002ded42be021d2b",
+      "0x139a9032a46c3afe3456eb5f0a35183b5f189cae"
     ],
-    "snapshot": 21977746
+    "snapshot": 15705816
   }
 ]

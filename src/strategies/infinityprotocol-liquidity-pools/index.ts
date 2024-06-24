@@ -2,8 +2,7 @@ import { getAddress } from '@ethersproject/address';
 import { subgraphRequest } from '../../utils';
 
 const INFINITYPROTOCOL_SUBGRAPH_URL = {
-  '56':
-    'https://api.thegraph.com/subgraphs/name/infinitywallet/infinity-protocol'
+  '56': 'https://subgrapher.snapshot.org/subgraph/arbitrum/5bvBvmThMNxZiioc5qkfE3s43YWMVsvLCgFstr1nDfiH'
 };
 
 export const author = 'vfatouros';
@@ -54,7 +53,9 @@ export async function strategy(
   }
   const tokenAddress = options.address.toLowerCase();
   const result = await subgraphRequest(
-    INFINITYPROTOCOL_SUBGRAPH_URL[network],
+    options.subGraphURL
+      ? options.subGraphURL
+      : INFINITYPROTOCOL_SUBGRAPH_URL[network],
     params
   );
   const score = {};
@@ -69,11 +70,13 @@ export async function strategy(
         .forEach((lp) => {
           const token0perShard = lp.pair.reserve0 / lp.pair.totalSupply;
           const token1perShard = lp.pair.reserve1 / lp.pair.totalSupply;
-          const userScore =
+          let userScore =
             lp.pair.token0.id == tokenAddress
               ? token0perShard * lp.liquidityTokenBalance
               : token1perShard * lp.liquidityTokenBalance;
-
+          if (options.scoreMultiplier) {
+            userScore = userScore * options.scoreMultiplier;
+          }
           const userAddress = getAddress(u.id);
           if (!score[userAddress]) score[userAddress] = 0;
           score[userAddress] = score[userAddress] + userScore;

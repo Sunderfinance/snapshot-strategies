@@ -4,10 +4,10 @@ interface ApiReturn {
 }
 
 export const author = 'iotex';
-export const version = '0.0.1';
+export const version = '0.0.2';
 
-const testNetUrl = 'https://testnet.iotexscout.io/apiproxy';
-const mainNetUrl = 'https://iotexscout.io/apiproxy';
+const testNetUrl = 'https://analyser-api.testnet.iotex.io';
+const mainNetUrl = 'https://analyser-api.iotex.io';
 
 function getUrl(network) {
   return network == 4689 ? mainNetUrl : testNetUrl;
@@ -23,20 +23,17 @@ export async function strategy(
 ) {
   const height = typeof snapshot === 'number' ? snapshot : 10000000000;
   const apiUrl = getUrl(network);
-  const response = await fetch(
-    `${apiUrl}/api.AccountVoteService.GetVoteByHeight`,
-    {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        address: addresses,
-        height
-      })
-    }
-  );
+  const response = await fetch(`${apiUrl}/api.StakingService.VoteByHeight`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      address: addresses,
+      height
+    })
+  });
 
   const ret: ApiReturn = await response.json();
   return Object.fromEntries(
